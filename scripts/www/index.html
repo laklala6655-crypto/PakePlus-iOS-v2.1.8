@@ -1,88 +1,591 @@
 <!DOCTYPE html>
-<html lang="en">
-    <head>
-        <meta charset="UTF-8" />
-        <link rel="stylesheet" href="./static/css/styles.css" />
-        <meta
-            http-equiv="Content-Security-Policy"
-            content="default-src * 'unsafe-inline' 'unsafe-eval'"
-        />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Tauri App</title>
-        <script src="./static/js/main.js"></script>
-    </head>
-    <body>
-        <main class="container">
-            <h1>Welcome to TauriMan</h1>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <title>生肖号码下注统计系统</title>
+  <style>
+    .container { display: flex; gap: 20px; padding: 20px; }
+    .input-section, .stats { border: 1px solid #ccc; padding: 15px; border-radius: 5px; }
+    input, select, button { margin: 5px; }
+    table { border-collapse: collapse; margin-top: 10px; width: 100%; }
+    td, th { border: 1px solid #ddd; padding: 6px; text-align: center; }
+    .total { font-weight: bold; color: #d32f2f; margin-top: 10px; font-size: 18px; }
+    .segments-container { display: flex; gap: 10px; flex-wrap: wrap; }
+    .segment { flex: 1 1 200px; min-width: 150px; }
+    .segment h4 { margin: 10px 0; text-align: center; background-color: #f0f0f0; padding: 5px; }
+    .red { color: #d32f2f; font-weight: bold; }
+    .green { color: #4CAF50; font-weight: bold; }
+    .blue { color: #1976D2; font-weight: bold; }
+    .highlight { background-color: #ffeb3b; font-weight: bold; }
+    .tail-buttons, .wave-buttons, .shengxiao-buttons { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; }
+    .tail-buttons button, .wave-buttons button, .shengxiao-buttons button { flex: 1 1 calc(20% - 10px); padding: 8px; font-size: 14px; border: 1px solid #ccc; border-radius: 4px; cursor: pointer; }
+    .selected { background-color: #4CAF50; color: white; border-color: #45a049; }
+    .amount-input { width: 95%; margin-bottom: 10px; padding: 12px; font-size: 16px; border: 2px solid #4CAF50; border-radius: 4px; }
+    .quick-amounts { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 15px; }
+    .quick-amounts button { flex: 1 1 calc(16.66% - 5px); padding: 8px; font-size: 14px; background-color: #2196F3; color: white; border: none; border-radius: 4px; cursor: pointer; }
+    .quick-amounts button:hover { background-color: #1976D2; }
+    .notes-section { margin-top: 20px; padding: 10px; background-color: #f9f9f9; border-radius: 5px; }
+    .notes-section input { width: 200px; padding: 8px; border: 1px solid #ccc; border-radius: 4px; }
+    .undo-btn { background-color: #f44336; color: white; padding: 8px 15px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; margin-bottom: 10px; }
+    .undo-btn:hover { background-color: #d32f2f; }
+    .winner-section { margin-top: 20px; padding: 15px; border: 2px solid #4CAF50; border-radius: 5px; background-color: #f9f9f9; }
+    .winner-input { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
+    .winner-input input { width: 100px; padding: 8px; font-size: 16px; border: 2px solid #4CAF50; border-radius: 4px; }
+    .winner-input button { padding: 8px 15px; background-color: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer; }
+    .winner-input button:hover { background-color: #45a049; }
+    .winner-input button.clear { background-color: #f44336; }
+    .winner-input button.clear:hover { background-color: #d32f2f; }
+    .profit-loss { font-size: 18px; font-weight: bold; padding: 10px; border-radius: 4px; margin-top: 10px; }
+    .profit { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+    .loss { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+    .winner-display { margin-top: 10px; padding: 10px; background-color: #e8f5e8; border-radius: 4px; }
+    .winner-number { font-size: 24px; font-weight: bold; color: #4CAF50; }
+    button { cursor: pointer; }
+    hr { margin: 15px 0; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- 输入区域 -->
+    <div class="input-section">
+      <h3>📝 批量添加下注</h3>
+      <button onclick="undoLastBet()" class="undo-btn">↩ 返回(撤销上一步)</button>
+      
+      <!-- 生肖按钮 -->
+      <h4>生肖选择</h4>
+      <div class="shengxiao-buttons">
+        <button onclick="toggleShengxiao('马')">🐎 马</button>
+        <button onclick="toggleShengxiao('蛇')">🐍 蛇</button>
+        <button onclick="toggleShengxiao('龙')">🐉 龙</button>
+        <button onclick="toggleShengxiao('兔')">🐰 兔</button>
+        <button onclick="toggleShengxiao('虎')">🐯 虎</button>
+        <button onclick="toggleShengxiao('牛')">🐮 牛</button>
+        <button onclick="toggleShengxiao('鼠')">🐭 鼠</button>
+        <button onclick="toggleShengxiao('猪')">🐷 猪</button>
+        <button onclick="toggleShengxiao('狗')">🐶 狗</button>
+        <button onclick="toggleShengxiao('鸡')">🐔 鸡</button>
+        <button onclick="toggleShengxiao('猴')">🐵 猴</button>
+        <button onclick="toggleShengxiao('羊')">🐑 羊</button>
+      </div>
+      <button onclick="batchAddByShengxiao()">✅ 按生肖批量添加</button>
+      <hr>
+      
+      <!-- 号码输入 - 支持任何分隔符 -->
+      <h4>号码输入</h4>
+      <input type="text" id="numbers" placeholder="📌 输入号码，可用任何符号分隔，如: 1,13,25 或 1 13 25" style="width: 95%; padding: 8px;">
+      <button onclick="batchAddByNumbers()">✅ 按号码批量添加</button>
+      <hr>
+      
+      <!-- 波色按钮 -->
+      <h4>波色选择</h4>
+      <div class="wave-buttons">
+        <button onclick="toggleWave('red')">🔴 红波</button>
+        <button onclick="toggleWave('green')">🟢 绿波</button>
+        <button onclick="toggleWave('blue')">🔵 蓝波</button>
+      </div>
+      <button onclick="batchAddByWave()">✅ 按波色批量添加</button>
+      <hr>
+      
+      <!-- 尾数按钮 -->
+      <h4>尾数选择</h4>
+      <div class="tail-buttons">
+        <button onclick="toggleTail(0)">0尾</button>
+        <button onclick="toggleTail(1)">1尾</button>
+        <button onclick="toggleTail(2)">2尾</button>
+        <button onclick="toggleTail(3)">3尾</button>
+        <button onclick="toggleTail(4)">4尾</button>
+        <button onclick="toggleTail(5)">5尾</button>
+        <button onclick="toggleTail(6)">6尾</button>
+        <button onclick="toggleTail(7)">7尾</button>
+        <button onclick="toggleTail(8)">8尾</button>
+        <button onclick="toggleTail(9)">9尾</button>
+      </div>
+      <button onclick="batchAddByTail()">✅ 按尾数批量添加</button>
+      <hr>
+      
+      <!-- 单注金额输入 -->
+      <h4>💰 单注金额</h4>
+      <input type="number" id="amount" placeholder="输入金额" class="amount-input">
+      
+      <!-- 快捷金额按钮 -->
+      <div class="quick-amounts">
+        <button onclick="setAmount(10)">10</button>
+        <button onclick="setAmount(20)">20</button>
+        <button onclick="setAmount(30)">30</button>
+        <button onclick="setAmount(50)">50</button>
+        <button onclick="setAmount(100)">100</button>
+        <button onclick="setAmount(200)">200</button>
+        <button onclick="setAmount(500)">500</button>
+        <button onclick="setAmount(1000)">1000</button>
+        <button onclick="setAmount(2000)">2000</button>
+        <button onclick="setAmount(5000)">5000</button>
+        <button onclick="setAmount(10000)">10000</button>
+        <button onclick="clearAmount()">清除</button>
+      </div>
+      <hr>
+      
+      <!-- 备注区域 -->
+      <div class="notes-section">
+        <h4>📋 备注</h4>
+        <input type="text" id="noteInput" placeholder="输入备注，如: 张三">
+        <button onclick="addNote()">➕ 添加备注</button>
+        <button onclick="downloadNotes()">📥 下载备注统计</button>
+      </div>
+    </div>
 
-            <div class="row">
-                <a
-                    href="https://tauri.app"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                >
-                    <img
-                        src="./assets/tauri.svg"
-                        class="logo tauri"
-                        alt="Tauri logo"
-                    />
-                </a>
-                <a
-                    href="https://pakeplus.com/"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                >
-                    <img
-                        src="https://hk.gh-proxy.org/https://github.com/Sjj1024/PakePlus/blob/main/app-icon.png"
-                        class="logo vanilla"
-                        alt="JavaScript logo"
-                    />
-                </a>
-            </div>
-            <p>Click to get data</p>
-            <form class="row" id="greet-form">
-                <input id="greet-input" placeholder="Enter a name..." />
-                <button type="submit" id="getdata">GET DATA</button>
-            </form>
-            <div class="functions">
-                <a href="./book.html" target="_self">跳转到book.html</a>
-                <a
-                    href="https://www.baidu.com"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    >跳到百度blank
-                </a>
-                <a
-                    href="https://www.baidu.com"
-                    target="_self"
-                    rel="noopener noreferrer"
-                >
-                    跳到百度self
-                </a>
-                <button onclick="sayHello()">点击我</button>
-                <button onclick="sayHello()">下载文件</button>
-                <button onclick="sayHello()">上传文件</button>
-                <button onclick="sayHello()">访问相机</button>
-                <button onclick="sayHello()">访问麦克风</button>
-                <button onclick="sayHello()">访问相册</button>
-                <button class="btn" onclick="openWechat()">打开微信</button>
-                <button class="btn" onclick="openWechatScan()">
-                    打开扫一扫
-                </button>
-                <button class="btn" onclick="openZhihu()">打开知乎</button>
-                <button onclick="sayHello()">打开抖音</button>
-                <button onclick="sayHello()">用浏览器打开</button>
-                <button>打开知乎</button>
-            </div>
-            <p id="greet-msg"></p>
-            <img src="./static/image/cursor.jpeg" alt="logo" />
-            <video
-                src="https://hk.gh-proxy.org/https://github.com/Sjj1024/PakePlus/blob/main/docs/static/videos/pakeplus.mp4"
-                autoplay
-                controls
-                style="width: 100%; height: 100%"
-            ></video>
-            <audio src="./static/music/yin.mp3" controls></audio>
-        </main>
-    </body>
+    <!-- 统计显示区域 -->
+    <div class="stats">
+      <h3>📊 号码汇总 (1-49)</h3>
+      <div class="total">
+        总金额合计：¥<span id="totalAmount">0.00</span>
+      </div>
+      
+      <!-- 中奖号码和盈亏计算区域 -->
+      <div class="winner-section">
+        <h4>🏆 中奖号码与盈亏计算</h4>
+        <div class="winner-input">
+          <input type="number" id="winnerNumber" min="1" max="49" placeholder="中奖号码">
+          <button onclick="calculateProfit()">计算盈亏</button>
+          <button onclick="clearWinner()" class="clear">清除</button>
+        </div>
+        
+        <!-- 中奖号码显示 -->
+        <div class="winner-display" id="winnerDisplay">
+          当前中奖号码：<span class="winner-number" id="winnerNumberDisplay">未设置</span>
+        </div>
+        
+        <!-- 盈亏显示 -->
+        <div class="profit-loss" id="profitLossDisplay" style="display: none;">
+          <span id="profitLossText"></span>
+        </div>
+        
+        <!-- 中奖详情 -->
+        <div id="winnerDetails" style="margin-top: 10px; font-size: 14px;"></div>
+      </div>
+      
+      <!-- 分段显示 -->
+      <div class="segments-container">
+        <div class="segment">
+          <h4>1-12</h4>
+          <table id="segment1-12">
+            <tr><th>号码</th><th>生肖</th><th>金额</th></tr>
+          </table>
+        </div>
+        <div class="segment">
+          <h4>13-24</h4>
+          <table id="segment13-24">
+            <tr><th>号码</th><th>生肖</th><th>金额</th></tr>
+          </table>
+        </div>
+        <div class="segment">
+          <h4>25-36</h4>
+          <table id="segment25-36">
+            <tr><th>号码</th><th>生肖</th><th>金额</th></tr>
+          </table>
+        </div>
+        <div class="segment">
+          <h4>37-49</h4>
+          <table id="segment37-49">
+            <tr><th>号码</th><th>生肖</th><th>金额</th></tr>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 生肖与号码映射表（马开始）
+    const shengxiaoMap = {
+      '马': [1, 13, 25, 37, 49],
+      '蛇': [2, 14, 26, 38],
+      '龙': [3, 15, 27, 39],
+      '兔': [4, 16, 28, 40],
+      '虎': [5, 17, 29, 41],
+      '牛': [6, 18, 30, 42],
+      '鼠': [7, 19, 31, 43],
+      '猪': [8, 20, 32, 44],
+      '狗': [9, 21, 33, 45],
+      '鸡': [10, 22, 34, 46],
+      '猴': [11, 23, 35, 47],
+      '羊': [12, 24, 36, 48]
+    };
+
+    // 波色映射表
+    const waveColors = {
+      red: [1, 2, 7, 8, 12, 13, 18, 19, 23, 24, 29, 30, 34, 35, 40, 45, 46],
+      blue: [3, 4, 9, 10, 14, 15, 20, 25, 26, 31, 36, 37, 41, 42, 47, 48],
+      green: [5, 6, 11, 16, 17, 21, 22, 27, 28, 32, 33, 38, 39, 43, 44, 49]
+    };
+
+    // 尾数映射表
+    const tailNumbers = {
+      0: [10, 20, 30, 40],
+      1: [1, 11, 21, 31, 41],
+      2: [2, 12, 22, 32, 42],
+      3: [3, 13, 23, 33, 43],
+      4: [4, 14, 24, 34, 44],
+      5: [5, 15, 25, 35, 45],
+      6: [6, 16, 26, 36, 46],
+      7: [7, 17, 27, 37, 47],
+      8: [8, 18, 28, 38, 48],
+      9: [9, 19, 29, 39, 49]
+    };
+
+    // 初始化号码统计
+    let numberStats = {};
+    for (let i = 1; i <= 49; i++) {
+      numberStats[i] = { shengxiao: getShengxiaoByNumber(i), amount: 0 };
+    }
+
+    let notes = {};
+    let historyStack = [];
+    let currentWinner = null;
+    let selectedShengxiao = [];
+    let selectedWaves = [];
+    let selectedTails = [];
+
+    // 根据号码获取生肖
+    function getShengxiaoByNumber(num) {
+      for (const [sx, nums] of Object.entries(shengxiaoMap)) {
+        if (nums.includes(num)) return sx;
+      }
+      return '无';
+    }
+
+    // 设置快捷金额
+    function setAmount(value) {
+      document.getElementById('amount').value = value;
+    }
+    
+    function clearAmount() {
+      document.getElementById('amount').value = '';
+    }
+
+    // 解析输入的数字（支持任何分隔符）
+    function parseNumbers(input) {
+      if (!input || input.trim() === '') return [];
+      const numberMatches = input.match(/-?\d+/g) || [];
+      return numberMatches
+        .map(numStr => parseInt(numStr, 10))
+        .filter(num => !isNaN(num) && num >= 1 && num <= 49);
+    }
+
+    // 保存状态到历史记录
+    function saveStateToHistory() {
+      const currentState = JSON.parse(JSON.stringify(numberStats));
+      historyStack.push(currentState);
+    }
+
+    // 撤销上一步操作
+    function undoLastBet() {
+      if (historyStack.length === 0) {
+        alert("没有可撤销的操作");
+        return;
+      }
+      const lastState = historyStack.pop();
+      numberStats = JSON.parse(JSON.stringify(lastState));
+      updateDisplay();
+      alert("已撤销上一步操作");
+    }
+
+    // 切换生肖选择
+    function toggleShengxiao(sx) {
+      const button = document.querySelector(`.shengxiao-buttons button[onclick*="${sx}"]`);
+      if (selectedShengxiao.includes(sx)) {
+        selectedShengxiao = selectedShengxiao.filter(s => s !== sx);
+        button.classList.remove('selected');
+      } else {
+        selectedShengxiao.push(sx);
+        button.classList.add('selected');
+      }
+    }
+
+    // 按生肖批量添加
+    function batchAddByShengxiao() {
+      const amount = parseFloat(document.getElementById('amount').value);
+      if (!amount || amount <= 0) return alert('金额无效');
+      saveStateToHistory();
+      selectedShengxiao.forEach(sx => {
+        if (shengxiaoMap[sx]) {
+          shengxiaoMap[sx].forEach(num => {
+            numberStats[num].amount += amount;
+          });
+        }
+      });
+      updateDisplay();
+    }
+
+    // 按号码批量添加
+    function batchAddByNumbers() {
+      const inputText = document.getElementById('numbers').value;
+      const numbers = parseNumbers(inputText);
+      if (numbers.length === 0) {
+        alert('没有有效的号码，请至少输入一个1-49之间的数字');
+        return;
+      }
+      const amount = parseFloat(document.getElementById('amount').value);
+      if (!amount || amount <= 0) return alert('金额无效');
+      saveStateToHistory();
+      numbers.forEach(num => {
+        if (num >=1 && num <=49) numberStats[num].amount += amount;
+      });
+      updateDisplay();
+      document.getElementById('numbers').value = '';
+    }
+
+    // 切换波色选择
+    function toggleWave(wave) {
+      const button = document.querySelector(`.wave-buttons button[onclick*="${wave}"]`);
+      if (selectedWaves.includes(wave)) {
+        selectedWaves = selectedWaves.filter(w => w !== wave);
+        button.classList.remove('selected');
+      } else {
+        selectedWaves.push(wave);
+        button.classList.add('selected');
+      }
+    }
+
+    // 按波色批量添加
+    function batchAddByWave() {
+      const amount = parseFloat(document.getElementById('amount').value);
+      if (!amount || amount <= 0) return alert('金额无效');
+      saveStateToHistory();
+      selectedWaves.forEach(wave => {
+        if (waveColors[wave]) {
+          waveColors[wave].forEach(num => {
+            numberStats[num].amount += amount;
+          });
+        }
+      });
+      updateDisplay();
+    }
+
+    // 切换尾数选择
+    function toggleTail(tail) {
+      const button = document.querySelector(`.tail-buttons button:nth-child(${tail + 1})`);
+      if (selectedTails.includes(tail)) {
+        selectedTails = selectedTails.filter(t => t !== tail);
+        button.classList.remove('selected');
+      } else {
+        selectedTails.push(tail);
+        button.classList.add('selected');
+      }
+      highlightTails();
+    }
+
+    // 按尾数批量添加
+    function batchAddByTail() {
+      const amount = parseFloat(document.getElementById('amount').value);
+      if (!amount || amount <= 0) return alert('金额无效');
+      saveStateToHistory();
+      selectedTails.forEach(tail => {
+        if (tailNumbers[tail]) {
+          tailNumbers[tail].forEach(num => {
+            numberStats[num].amount += amount;
+          });
+        }
+      });
+      updateDisplay();
+    }
+
+    // 高亮选中的尾数
+    function highlightTails() {
+      const segments = {
+        '1-12': document.getElementById('segment1-12'),
+        '13-24': document.getElementById('segment13-24'),
+        '25-36': document.getElementById('segment25-36'),
+        '37-49': document.getElementById('segment37-49')
+      };
+      for (const table of Object.values(segments)) {
+        for (const row of table.rows) {
+          row.classList.remove('highlight');
+        }
+      }
+      selectedTails.forEach(tail => {
+        if (tailNumbers[tail]) {
+          tailNumbers[tail].forEach(num => {
+            const segment = getSegmentByNumber(num);
+            const table = segments[segment];
+            for (const row of table.rows) {
+              if (row.cells[0] && row.cells[0].textContent === num.toString().padStart(2, '0')) {
+                row.classList.add('highlight');
+              }
+            }
+          });
+        }
+      });
+    }
+
+    // 计算总金额
+    function calculateTotalAmount() {
+      let total = 0;
+      for (let num = 1; num <= 49; num++) {
+        total += numberStats[num].amount;
+      }
+      return total;
+    }
+
+    // 计算盈亏
+    function calculateProfit() {
+      const winnerNum = parseInt(document.getElementById('winnerNumber').value);
+      if (isNaN(winnerNum) || winnerNum < 1 || winnerNum > 49) {
+        alert("请输入有效的中奖号码 (1-49)");
+        return;
+      }
+      currentWinner = winnerNum;
+      document.getElementById('winnerNumberDisplay').textContent = winnerNum;
+      const winnerAmount = numberStats[winnerNum].amount;
+      const totalAmount = calculateTotalAmount();
+      const profit = (winnerAmount * 48) - totalAmount;
+      const profitLossDisplay = document.getElementById('profitLossDisplay');
+      const profitLossText = document.getElementById('profitLossText');
+      profitLossDisplay.style.display = 'block';
+      profitLossDisplay.className = `profit-loss ${profit >= 0 ? 'profit' : 'loss'}`;
+      profitLossText.innerHTML = `
+        中奖号码 ${winnerNum} 下注金额: ¥${winnerAmount.toFixed(2)}<br>
+        总投注金额: ¥${totalAmount.toFixed(2)}<br>
+        <strong>盈亏: ¥${profit.toFixed(2)}</strong>
+      `;
+      document.getElementById('winnerDetails').innerHTML = `
+        <div style="padding: 8px; background-color: #fff; border-radius: 4px;">
+          <span style="color: #666;">计算公式: ${winnerAmount.toFixed(2)} × 48 - ${totalAmount.toFixed(2)} = ${profit.toFixed(2)}</span>
+        </div>
+      `;
+      highlightWinnerNumber(winnerNum);
+    }
+    
+    // 高亮中奖号码
+    function highlightWinnerNumber(winnerNum) {
+      const segments = {
+        '1-12': document.getElementById('segment1-12'),
+        '13-24': document.getElementById('segment13-24'),
+        '25-36': document.getElementById('segment25-36'),
+        '37-49': document.getElementById('segment37-49')
+      };
+      for (const table of Object.values(segments)) {
+        for (const row of table.rows) {
+          row.style.backgroundColor = '';
+          row.style.fontWeight = '';
+          row.style.color = '';
+        }
+      }
+      const segment = getSegmentByNumber(winnerNum);
+      const table = segments[segment];
+      for (const row of table.rows) {
+        if (row.cells[0] && row.cells[0].textContent === winnerNum.toString().padStart(2, '0')) {
+          row.style.backgroundColor = '#4CAF50';
+          row.style.fontWeight = 'bold';
+          row.style.color = 'white';
+        }
+      }
+    }
+    
+    // 清除中奖号码
+    function clearWinner() {
+      currentWinner = null;
+      document.getElementById('winnerNumber').value = '';
+      document.getElementById('winnerNumberDisplay').textContent = '未设置';
+      document.getElementById('profitLossDisplay').style.display = 'none';
+      document.getElementById('winnerDetails').innerHTML = '';
+      const segments = {
+        '1-12': document.getElementById('segment1-12'),
+        '13-24': document.getElementById('segment13-24'),
+        '25-36': document.getElementById('segment25-36'),
+        '37-49': document.getElementById('segment37-49')
+      };
+      for (const table of Object.values(segments)) {
+        for (const row of table.rows) {
+          row.style.backgroundColor = '';
+          row.style.fontWeight = '';
+          row.style.color = '';
+        }
+      }
+    }
+
+    // 更新显示
+    function updateDisplay() {
+      const segments = {
+        '1-12': document.getElementById('segment1-12'),
+        '13-24': document.getElementById('segment13-24'),
+        '25-36': document.getElementById('segment25-36'),
+        '37-49': document.getElementById('segment37-49')
+      };
+      for (const table of Object.values(segments)) {
+        table.innerHTML = `<tr><th>号码</th><th>生肖</th><th>金额</th></tr>`;
+      }
+      let total = 0;
+      for (let num = 1; num <= 49; num++) {
+        const segment = getSegmentByNumber(num);
+        const row = segments[segment].insertRow();
+        const cell1 = row.insertCell();
+        const cell2 = row.insertCell();
+        const cell3 = row.insertCell();
+        cell1.textContent = num.toString().padStart(2, '0');
+        cell2.textContent = numberStats[num].shengxiao;
+        cell3.textContent = `¥${numberStats[num].amount.toFixed(2)}`;
+        total += numberStats[num].amount;
+        if (waveColors.red.includes(num)) {
+          cell1.className = 'red';
+          cell2.className = 'red';
+          cell3.className = 'red';
+        } else if (waveColors.blue.includes(num)) {
+          cell1.className = 'blue';
+          cell2.className = 'blue';
+          cell3.className = 'blue';
+        } else if (waveColors.green.includes(num)) {
+          cell1.className = 'green';
+          cell2.className = 'green';
+          cell3.className = 'green';
+        }
+      }
+      document.getElementById('totalAmount').textContent = total.toFixed(2);
+      if (currentWinner) {
+        calculateProfit();
+      }
+    }
+
+    // 获取号码所在区间
+    function getSegmentByNumber(num) {
+      if (num <= 12) return '1-12';
+      if (num <= 24) return '13-24';
+      if (num <= 36) return '25-36';
+      return '37-49';
+    }
+
+    // 添加备注
+    function addNote() {
+      const note = document.getElementById('noteInput').value.trim();
+      if (!note) return alert('备注不能为空');
+      notes[note] = JSON.parse(JSON.stringify(numberStats));
+      alert(`备注 "${note}" 已添加`);
+      document.getElementById('noteInput').value = '';
+    }
+
+    // 下载备注统计
+    function downloadNotes() {
+      let content = '';
+      for (const [note, stats] of Object.entries(notes)) {
+        content += `备注：${note}\n`;
+        content += '号码\t生肖\t金额\n';
+        let total = 0;
+        for (let num = 1; num <= 49; num++) {
+          content += `${num.toString().padStart(2, '0')}\t${stats[num].shengxiao}\t¥${stats[num].amount.toFixed(2)}\n`;
+          total += stats[num].amount;
+        }
+        content += `总金额合计：¥${total.toFixed(2)}\n\n`;
+      }
+      const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = '备注统计.txt';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    // 初始化
+    updateDisplay();
+  </script>
+</body>
 </html>
